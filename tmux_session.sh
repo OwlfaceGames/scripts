@@ -23,15 +23,15 @@ if [ $? != 0 ]; then
   # Using the session name as the directory name
   tmux send-keys -t $SESSION_NAME:code "cd $HOME" C-m
   
-  # Open vim in the first pane
-  tmux send-keys -t $SESSION_NAME:code "vim" C-m
-  
   # Split the window vertically
   tmux split-window -h -t $SESSION_NAME:code
   
   # Change to the project directory in the right pane
   tmux send-keys -t $SESSION_NAME:code.2 "cd $HOME" C-m
   
+  # Open vim in the second pane
+  tmux send-keys -t $SESSION_NAME:code.2 "vim" C-m
+
   # Create a second window named "term"
   tmux new-window -t $SESSION_NAME -n term
   
