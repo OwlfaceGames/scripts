@@ -15,14 +15,8 @@ if [ $? != 0 ]; then
   # Change to the earthen_heart directory in the first pane
   tmux send-keys -t $SESSION_NAME:code "cd $ehdir" C-m
   
-  # Split the window vertically
-  tmux split-window -h -t $SESSION_NAME:code
-  
-  # Change to the earthen_heart directory in the right pane
-  tmux send-keys -t $SESSION_NAME:code.2 "cd $ehdir" C-m
-  
-  # Open nvim in the second pane
-  tmux send-keys -t $SESSION_NAME:code.2 "vim" C-m
+  # Open nvim in the pane
+  tmux send-keys -t $SESSION_NAME:code "vim" C-m
 
   # Create a second window named "term"
   tmux new-window -t $SESSION_NAME -n term
