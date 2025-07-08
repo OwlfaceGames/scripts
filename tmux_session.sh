@@ -19,23 +19,13 @@ if [ $? != 0 ]; then
   # Create a new session with the first window named "code"
   tmux new-session -s $SESSION_NAME -n code -d
   
-  # Change to the project directory in the first pane
-  # Using the session name as the directory name
+  # Change to the root directory in the first pane
   tmux send-keys -t $SESSION_NAME:code "cd $HOME" C-m
   
-  # Split the window vertically
-  tmux split-window -h -t $SESSION_NAME:code
-  
-  # Change to the project directory in the right pane
-  tmux send-keys -t $SESSION_NAME:code.2 "cd $HOME" C-m
-  
-  # Open vim in the second pane
-  tmux send-keys -t $SESSION_NAME:code.2 "vim" C-m
-
   # Create a second window named "term"
   tmux new-window -t $SESSION_NAME -n term
   
-  # Change to the project directory in the term window
+  # Change to the root directory in the term window
   tmux send-keys -t $SESSION_NAME:term "cd $HOME" C-m
   
   # Create a third window named "other"
