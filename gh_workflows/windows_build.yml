@@ -2,7 +2,7 @@ name: Build For Windows
 on:
   workflow_dispatch:
 jobs:
-  build-windows:
+  windows_build:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
