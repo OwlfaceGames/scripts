@@ -1,0 +1,29 @@
+name: Build For Windows
+on:
+  workflow_dispatch:
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Odin
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          Write-Host "Downloading..."
+          curl -L https://github.com/odin-lang/Odin/releases/download/dev-2026-02/odin-windows-amd64-dev-2026-02.zip -o odin.zip
+          Write-Host "Extracting..."
+          Expand-Archive -Path odin.zip -DestinationPath odin
+          Write-Host "Setting path..."
+          echo "$env:GITHUB_WORKSPACE\odin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          Write-Host "Done"
+      - name: Build Project
+        shell: pwsh
+        run: |
+          odin build src -out:Programe_Name.exe -o:speed
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Programe Name
+          path: Programe_Name.exe
+
