@@ -1,0 +1,97 @@
+name: windows_auto_release
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version bump type'
+        required: false
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # needed to read git tags
+
+      - name: Compute next version
+        id: version
+        shell: pwsh
+        run: |
+          # Get the latest semver tag, default to v0.0.0 if none exist
+          $latest = git tag --list "v*" --sort=-version:refname | Select-Object -First 1
+          if (-not $latest) { $latest = "v0.0.0" }
+
+          $parts = $latest.TrimStart("v") -split "\."
+          $major = [int]$parts[0]
+          $minor = [int]$parts[1]
+          $patch = [int]$parts[2]
+
+          switch ("${{ github.event.inputs.bump }}") {
+            "major" { $major++; $minor = 0; $patch = 0 }
+            "minor" { $minor++; $patch = 0 }
+            default { $patch++ }
+          }
+
+          $next = "v$major.$minor.$patch"
+          Write-Host "Previous: $latest  →  Next: $next"
+          echo "tag=$next" >> $env:GITHUB_OUTPUT
+          echo "prev=$latest" >> $env:GITHUB_OUTPUT
+
+      - name: Install Odin
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          Write-Host "Downloading..."
+          curl -L https://github.com/odin-lang/Odin/releases/download/dev-2026-02/odin-windows-amd64-dev-2026-02.zip -o odin.zip
+          Write-Host "Extracting..."
+          Expand-Archive -Path odin.zip -DestinationPath odin
+          Write-Host "Setting path..."
+          echo "$env:GITHUB_WORKSPACE\odin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          Write-Host "Done"
+
+      - name: Build Project
+        shell: pwsh
+        run: |
+          odin build src -out:Programe_Name.exe -o:speed
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Programe Name
+          path: Programe_Name.exe
+
+      - name: Tag and create release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = "${{ steps.version.outputs.tag }}"
+          $prev = "${{ steps.version.outputs.prev }}"
+
+          # Generate changelog from commits since the last tag
+          if ($prev -eq "v0.0.0") {
+            $log = git log --oneline | Out-String
+          } else {
+            $log = git log "$prev..HEAD" --oneline | Out-String
+          }
+
+          $notes = "## What's changed`n``````$log``````"
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag $tag
+          git push origin $tag
+
+          gh release create $tag Programe_Name.exe `
+            --title "Release $tag" `
+            --notes $notes
